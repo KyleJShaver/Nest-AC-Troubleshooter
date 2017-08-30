@@ -11,5 +11,5 @@ If your AC is getting old like mine, you might notice that it might be blowing w
   
 ## How do I use it?
   1. Register to access the [Nest API](https://codelabs.developers.google.com/codelabs/wwn-api-quickstart/#0) and get an auth token and your thermostat ID
-  2. You can either pass in the token and thermostat as parameters or put them in the config.json
+  2. You can either pass in the token and thermostat ID as parameters, or put them in the config.json
   3. Let the system run
