@@ -193,7 +193,7 @@ func loop(config NestConfig) {
 					outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n",
 						timeAsStr(),
 						"RESTARTING SYSTEM"))
-					shutoffData := NestData{HvacMode:"unrestarted"}
+					shutoffData := NestData{HvacMode: "unrestarted"}
 					for shutoffData.HvacMode != "off" {
 						shutoffData, err := nestPut(config, "off")
 						if err != nil {
@@ -206,7 +206,7 @@ func loop(config NestConfig) {
 							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), "RESTART: system turned off"))
 						}
 					}
-					restartData := NestData{HvacMode:"unrestarted"}
+					restartData := NestData{HvacMode: "unrestarted"}
 					for restartData.HvacMode != thermostatData.HvacMode {
 						restartData, err = nestPut(config, thermostatData.HvacMode)
 						if err != nil {
@@ -225,6 +225,9 @@ func loop(config NestConfig) {
 					lastIsCooling = thermostatData.IsCooling
 					lastTemp = thermostatData.CurrentTemperature
 				}
+			} else {
+				lastIsCooling = thermostatData.IsCooling
+				lastTemp = thermostatData.CurrentTemperature
 			}
 		}
 		outputFile.Sync()
