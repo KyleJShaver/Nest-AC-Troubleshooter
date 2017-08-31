@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"errors"
 	"time"
+	"net/url"
 )
 
 type NestConfig struct {
@@ -19,6 +20,8 @@ type NestConfig struct {
 	Output       string `json:"output"`
 	LastOutput   string `json:"last_output"`
 	Debug        bool `json:"debug"`
+	WebhookPost  string `json:"webhook_post"`
+	WebhookGet  string `json:"webhook_get"`
 }
 
 type NestCommand string
@@ -35,6 +38,8 @@ const (
 	Minutes NestCommand = "minute"
 	Config NestCommand = "config"
 	Output NestCommand = "output"
+	WebhookPost NestCommand = "webhook-post"
+	WebhookGet NestCommand = "webhook-get"
 )
 
 const (
@@ -64,6 +69,8 @@ func main() {
 		"--minute": Minutes, "-m": Minutes,
 		"--config": Config, "-c": Config,
 		"--output": Output, "-o": Output,
+		"--webhook-post": WebhookPost, "-wp": WebhookPost,
+		"--webhook-get": WebhookGet, "-wg": WebhookGet,
 	}
 	argMap := map[NestCommand]string {}
 	for i:= 1; i < len(os.Args) - 1; i+=2 {
@@ -109,6 +116,22 @@ func main() {
 	if output := argMap[Output]; output != "" {
 		config.Output = output
 	}
+	if webhookPost := argMap[WebhookPost]; webhookPost != "" {
+		_, err := url.ParseRequestURI(webhookPost)
+		if err != nil {
+			printError("invalid webhook-post url", err)
+			return
+		}
+		config.WebhookPost = webhookPost
+	}
+	if webhookGet := argMap[WebhookGet]; webhookGet != "" {
+		_, err := url.ParseRequestURI(webhookGet)
+		if err != nil {
+			printError("invalid webhook-get url", err)
+			return
+		}
+		config.WebhookGet = webhookGet
+	}
 	loop(config)
 }
 
@@ -127,6 +150,8 @@ func displayHelp()  {
 	fmt.Printf("--minute -m [1-99]          set sampling time in minutes\n")
 	fmt.Printf("--config -c [config file]   location of config file\n")
 	fmt.Printf("--output -o [output file]   where to save the output .tsv file\n")
+	fmt.Printf("--webhook-post -wp [url]    webhook post to be fired when system restart begins\n")
+	fmt.Printf("--webhook-get -wg [url]     webhook get to be fired when system restart begins\n")
 }
 
 func printError(message string, err error) {
@@ -193,6 +218,28 @@ func loop(config NestConfig) {
 					outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n",
 						timeAsStr(),
 						"RESTARTING SYSTEM"))
+					go func(){
+						if config.WebhookPost != "" {
+							err := webhook("POST", config.WebhookPost)
+							if err != nil {
+								printError("Problem with webhook-post", err)
+							} else {
+								outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n",
+									timeAsStr(),
+									"webhook-post performed"))
+							}
+						}
+						if config.WebhookGet != "" {
+							err := webhook("GET", config.WebhookGet)
+							if err != nil {
+								printError("Problem with webhook-get", err)
+							} else {
+								outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n",
+									timeAsStr(),
+									"webhook-get performed"))
+							}
+						}
+					}()
 					shutoffData := NestData{HvacMode: "unrestarted"}
 					for shutoffData.HvacMode != "off" {
 						shutoffData, err := nestPut(config, "off")
@@ -313,6 +360,7 @@ func nestPut(config NestConfig, hvacMode string) (NestData, error) {
 	req.Header.Set("Authorization", config.Token)
 	client := nestClient(req)
 	resp, err := client.Do(req)
+	defer resp.Body.Close()
 	if err != nil {
 		return NestData{}, errors.New(fmt.Sprintf("%s:\n%s\n", "Could not communicate with Nest", err))
 	}
@@ -321,4 +369,18 @@ func nestPut(config NestConfig, hvacMode string) (NestData, error) {
 	}
 	time.Sleep(time.Minute * 1)
 	return nestGet(config)
+}
+
+func webhook(method, url string) error {
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return errors.New(fmt.Sprintf("%s:\n%s\n", "Could not create request with webhook url", err))
+	}
+	client := nestClient(req)
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	if err != nil || resp.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("%s:\n%s\n", "Problem communicating with webhook", err))
+	}
+	return nil
 }
