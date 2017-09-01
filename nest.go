@@ -15,13 +15,13 @@ import (
 
 type NestConfig struct {
 	Token        string `json:"token"`
-	ThermostatID string `json:"thermostat_id"`
+	ThermostatID string `json:"thermostat-id"`
 	Minutes      int `json:"minutes"`
 	Output       string `json:"output"`
-	LastOutput   string `json:"last_output"`
+	LastOutput   string `json:"last-output"`
 	Debug        bool `json:"debug"`
-	WebhookPost  string `json:"webhook_post"`
-	WebhookGet  string `json:"webhook_get"`
+	WebhookPost  string `json:"webhook-post"`
+	WebhookGet  string `json:"webhook-get"`
 }
 
 type NestCommand string

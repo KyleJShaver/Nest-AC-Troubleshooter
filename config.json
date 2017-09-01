@@ -1,8 +1,8 @@
 {
-  "token":<OAUTH TOKEN HERE>,
-  "thermostat_id":<THERMOSTAT ID HERE>,
-  "minutes":10,
-  "output":"nest_tester.tsv",
+  "token": <OAUTH TOKEN HERE>
+  "thermostat-id":<THERMOSTAT ID HERE>,
+  "minutes":1,
+  "output":"data.tsv",
   "debug":true,
-  "last_output":"nest_tester_last_request.json"
+  "last-output":"last-request.json"
 }
