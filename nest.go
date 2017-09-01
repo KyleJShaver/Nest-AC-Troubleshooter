@@ -181,7 +181,7 @@ func loop(config NestConfig) {
 		}
 		thermostatData, err := nestGet(config)
 		if err != nil {
-			outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), err.Error()))
+			outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n", timeAsStr(), err.Error()))
 			printError("Error in GET request", err)
 		} else {
 			outputFile.WriteString(fmt.Sprintf("%s\t%t\t%d\n",
@@ -196,29 +196,28 @@ func loop(config NestConfig) {
 					shutoffData := NestData{HvacMode: "unrestarted"}
 					var err error
 					for shutoffData.HvacMode != "off" {
-						shutoffData, err := nestPut(config, "off")
 						shutoffData, err = nestPut(config, "off")
 						if err != nil {
-							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), errors.New(fmt.Sprintf("Error turning system off:\n%s", err.Error()))))
+							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n", timeAsStr(), errors.New(fmt.Sprintf("Error turning system off:\n%s", err.Error()))))
 							printError("Error turning system off", err)
 						} else if shutoffData.HvacMode != "off" {
-							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), "RESTART: waiting on turn off"))
+							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n", timeAsStr(), "RESTART: waiting on turn off"))
 							printError("RESTART: waiting on turn off", nil)
 						} else {
-							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), "RESTART: system turned off"))
+							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n", timeAsStr(), "RESTART: system turned off"))
 						}
 					}
 					restartData := NestData{HvacMode: "unrestarted"}
 					for restartData.HvacMode != thermostatData.HvacMode {
 						restartData, err = nestPut(config, thermostatData.HvacMode)
 						if err != nil {
-							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), errors.New(fmt.Sprintf("Error turning system back on:\n%s", err.Error()))))
+							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n", timeAsStr(), errors.New(fmt.Sprintf("Error turning system back on:\n%s", err.Error()))))
 							printError("Error turning system back on", err)
 						} else if restartData.HvacMode != thermostatData.HvacMode {
-							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), "RESTART: waiting on turn on"))
+							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n", timeAsStr(), "RESTART: waiting on turn on"))
 							printError("RESTART: waiting on turn on", nil)
 						} else {
-							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), "RESTART: system turned on"))
+							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s\n", timeAsStr(), "RESTART: system turned on"))
 						}
 					}
 					lastIsCooling = restartData.IsCooling
