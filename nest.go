@@ -194,8 +194,10 @@ func loop(config NestConfig) {
 						timeAsStr(),
 						"RESTARTING SYSTEM"))
 					shutoffData := NestData{HvacMode: "unrestarted"}
+					var err error
 					for shutoffData.HvacMode != "off" {
 						shutoffData, err := nestPut(config, "off")
+						shutoffData, err = nestPut(config, "off")
 						if err != nil {
 							outputFile.WriteString(fmt.Sprintf("%s\t\t\t%s", timeAsStr(), errors.New(fmt.Sprintf("Error turning system off:\n%s", err.Error()))))
 							printError("Error turning system off", err)
